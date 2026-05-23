@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RAKSHA — Kerala Flood & Landslide Reporting Userflow</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Lucide Icons for premium feel -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+  <!-- Top Global Header -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">R</div>
+      <div class="brand-title">RAKSHA<span>.APP</span></div>
+    </div>
+    
+    <!-- Simulation controls -->
+    <div class="controls-panel">
+      <div class="control-item">
+        <label for="network-switch" style="font-weight: 500;">Connection:</label>
+        <span id="network-status-label" style="color: var(--color-success); font-weight: 600;">Online</span>
+        <label class="switch">
+          <input type="checkbox" id="network-switch" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      
+      <div class="control-item">
+        <label for="ai-mode-select">AI Mode:</label>
+        <select id="ai-mode-select">
+          <option value="success">Valid Report (Auto-Verify)</option>
+          <option value="spam">Spam / Fake Image (Flag)</option>
+          <option value="low-confidence">Low Confidence / Duplicate</option>
+        </select>
+      </div>
+
+      <div class="control-item">
+        <button id="btn-reset" title="Reset Simulation"><i class="bi bi-arrow-clockwise"></i> Reset</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Split-Pane Content -->
+  <main>
+    
+    <!-- Left Pane: Userflow Visualizer -->
+    <div class="userflow-pane">
+      <div class="pane-header">
+        <h2>Visual Userflow Tracker</h2>
+        <p>Follow the active state of the user journey, database transactions, and AI validation flows.</p>
+      </div>
+      
+      <div class="diagram-container" id="diagram-container">
+        <!-- SVG overlay for dynamic connector lines -->
+        <svg class="flow-connections-svg" id="flow-svg">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 2 L 10 5 L 0 8 z" fill="#3b82f6" />
+            </marker>
+            <marker id="arrow-inactive" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 2 L 10 5 L 0 8 z" fill="rgba(255,255,255,0.08)" />
+            </marker>
+          </defs>
+        </svg>
+
+        <!-- Swimlane 1: Front-End Navigation & Entry -->
+        <div class="flow-swimlane" id="swimlane-frontend">
+          <div class="swimlane-title">1. Reporter Frontend & Inputs</div>
+          <div class="nodes-grid">
+            <div class="flow-node active" id="node-home" data-target="dashboard">
+              <div class="node-icon"><i class="bi bi-grid-1x2-fill"></i></div>
+              <div class="node-title">Dashboard Map</div>
+              <div class="node-desc">Citizen enters app. Views live incident list & safe route map tiles.</div>
+            </div>
+            
+            <div class="flow-node" id="node-report-btn">
+              <div class="node-icon"><i class="bi bi-plus-circle-fill"></i></div>
+              <div class="node-title">Tap Report</div>
+              <div class="node-desc">Initiates 3-step reporting wizard. Anonymous session created.</div>
+            </div>
+
+            <div class="flow-node" id="node-select-type">
+              <div class="node-icon"><i class="bi bi-info-circle-fill"></i></div>
+              <div class="node-title">Select Incident</div>
+              <div class="node-desc">Step 1: Choose Flood, Landslide, Roadblock, Rescue, or Missing.</div>
+            </div>
+
+            <div class="flow-node" id="node-location">
+              <div class="node-icon"><i class="bi bi-geo-alt-fill"></i></div>
+              <div class="node-title">Confirm GPS</div>
+              <div class="node-desc">Step 2: Auto-detect coordinates, map confirm layout.</div>
+            </div>
+
+            <div class="flow-node" id="node-details">
+              <div class="node-icon"><i class="bi bi-camera-fill"></i></div>
+              <div class="node-title">Photo & Compress</div>
+              <div class="node-desc">Step 3: Capture image. Client compresses <200KB on 2G.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Swimlane 2: Sync and AI Validation -->
+        <div class="flow-swimlane" id="swimlane-backend">
+          <div class="swimlane-title">2. Sync, Claude AI & Database Pipeline</div>
+          <div class="nodes-grid">
+            <div class="flow-node" id="node-offline-queue">
+              <div class="node-icon"><i class="bi bi-database-fill-down"></i></div>
+              <div class="node-title">IndexedDB Queue</div>
+              <div class="node-desc">Offline mode: cache report in queue. Syncs when connection resumes.</div>
+            </div>
+
+            <div class="flow-node" id="node-supabase-db">
+              <div class="node-icon"><i class="bi bi-database-fill-up"></i></div>
+              <div class="node-title">Supabase Save</div>
+              <div class="node-desc">Direct save of core report details to `reports` PostgreSQL schema.</div>
+            </div>
+
+            <div class="flow-node" id="node-claude-api">
+              <div class="node-icon"><i class="bi bi-cpu-fill"></i></div>
+              <div class="node-title">Claude API Verify</div>
+              <div class="node-desc">AI validates photo content, checks fraud/duplicates, score severity.</div>
+            </div>
+
+            <div class="flow-node" id="node-clustering">
+              <div class="node-icon"><i class="bi bi-bounding-box-circles"></i></div>
+              <div class="node-title">Cluster Reports</div>
+              <div class="node-desc">Groups adjacent submissions (<500m) into single verified incident.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Swimlane 3: Alerts and Dissemination -->
+        <div class="flow-swimlane" id="swimlane-alerts">
+          <div class="swimlane-title">3. Community Alerts & NDRF Dissemination</div>
+          <div class="nodes-grid">
+            <div class="flow-node" id="node-fcm-alert">
+              <div class="node-icon"><i class="bi bi-bell-fill"></i></div>
+              <div class="node-title">FCM Push Notification</div>
+              <div class="node-desc">Instant push alert delivered to citizens in affected district.</div>
+            </div>
+
+            <div class="flow-node" id="node-sms-twilio">
+              <div class="node-icon"><i class="bi bi-chat-left-dots-fill"></i></div>
+              <div class="node-title">Twilio SMS Fallback</div>
+              <div class="node-desc">Dispatches text messages to offline or feature phone subscribers.</div>
+            </div>
+
+            <div class="flow-node" id="node-whatsapp-share">
+              <div class="node-icon"><i class="bi bi-whatsapp"></i></div>
+              <div class="node-title">WhatsApp Share</div>
+              <div class="node-desc">Generates auto-Malayalam alert template for quick group sharing.</div>
+            </div>
+
+            <div class="flow-node" id="node-webhook">
+              <div class="node-icon"><i class="bi bi-send-check-fill"></i></div>
+              <div class="node-title">NDRF Webhook</div>
+              <div class="node-desc">Critical alerts escalated automatically to NDRF/Fire Control Center.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Right Pane: Simulator Device -->
+    <div class="simulator-pane">
+      
+      <!-- Phone Mockup Container -->
+      <div class="phone-frame">
+        
+        <!-- Camera and Speaker Notch -->
+        <div class="phone-notch">
+          <div class="notch-camera"></div>
+          <div class="notch-speaker"></div>
+          <div class="notch-camera" style="width: 5px; height: 5px; opacity: 0.5;"></div>
+        </div>
+        
+        <!-- Status Bar -->
+        <div class="phone-status-bar">
+          <span class="status-left" id="phone-time">18:47</span>
+          <span class="status-right">
+            <span id="phone-network-icon"><i class="bi bi-wifi"></i></span>
+            <span>5G</span>
+            <span><i class="bi bi-battery-full"></i></span>
+          </span>
+        </div>
+        
+        <!-- Push Notification Slider -->
+        <div class="push-notification" id="push-notification">
+          <div class="push-header">
+            <div class="push-logo">R</div>
+            <span>RAKSHA.APP</span>
+            <span class="push-time" id="push-time-val">Just now</span>
+          </div>
+          <div class="push-title" id="push-title-val">Critical Alert: Landslide</div>
+          <div class="push-body" id="push-body-val">Urgent: Landslide reported in Wayanad district. Avoid route via NH-766. Safe route active.</div>
+        </div>
+
+        <!-- Phone App Screen -->
+        <div class="phone-screen">
+          
+          <!-- RAKSHA Header -->
+          <div class="app-header">
+            <div class="app-brand">
+              <div class="app-logo">R</div>
+              <div class="app-title">RAKSHA<span>.APP</span></div>
+            </div>
+            <div class="app-actions">
+              <button class="app-btn-lang" id="btn-lang-toggle">മലയാളം</button>
+            </div>
+          </div>
+          
+          <!-- Offline Notice -->
+          <div class="offline-banner" id="offline-banner">
+            <i class="bi bi-cloud-slash-fill"></i> Offline Mode - Submissions will queue locally
+          </div>
+          
+          <!-- App Views -->
+          <div class="app-content">
+            
+            <!-- VIEW 1: Dashboard -->
+            <div class="app-screen-view active" id="view-dashboard">
+              <!-- Live Map Canvas Area -->
+              <div class="map-canvas-container" id="map-container">
+                <div class="map-grid-overlay"></div>
+                <!-- SVG overlays for paths / terrains -->
+                <svg class="map-terrain-path" id="map-vector-svg">
+                  <!-- Safe route path -->
+                  <path id="vector-safe-route" class="map-safe-route" d="M 50 120 Q 150 50 250 180 T 320 220" />
+                </svg>
+                <!-- Interactive button for safe route -->
+                <button class="map-safe-badge" id="btn-safe-route-toggle" aria-label="Toggle Safe Routes">
+                  <span class="safe-status-dot"></span>
+                  <i class="bi bi-shield-check"></i>
+                  <span id="lbl-safe-route-status">Safe Route: Inactive</span>
+                </button>
+              </div>
+              
+              <!-- Dashboard Content Grid -->
+              <div class="dashboard-grid">
+                <!-- Statistics -->
+                <div class="stats-row">
+                  <div class="stat-card">
+                    <div class="stat-label" id="lbl-stat-reports">Reports</div>
+                    <div class="stat-value" id="val-stat-reports">14</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-label" id="lbl-stat-verified">AI Verified</div>
+                    <div class="stat-value" id="val-stat-verified" style="color: var(--color-success);">92%</div>
+                  </div>
+                  <div class="stat-card">
+                    <div class="stat-label" id="lbl-stat-subs">Alert Subs</div>
+                    <div class="stat-value" id="val-stat-subs" style="color: var(--color-warning);">1,420</div>
+                  </div>
+                </div>
+                
+                <!-- Quick actions -->
+                <div class="actions-card">
+                  <button class="btn-action report" id="btn-dashboard-report">
+                    <span class="btn-action-icon"><i class="bi bi-exclamation-triangle-fill"></i></span>
+                    <span id="lbl-btn-report">Report Incident</span>
+                  </button>
+                  <button class="btn-action subscribe" id="btn-dashboard-subscribe">
+                    <span class="btn-action-icon"><i class="bi bi-bell-fill"></i></span>
+                    <span id="lbl-btn-subscribe">Get Alerts</span>
+                  </button>
+                </div>
+                
+                <!-- Recent Incidents Feed -->
+                <div class="district-panel">
+                  <div class="section-title">
+                    <span id="lbl-recent-incidents">Recent Incidents</span>
+                    <span id="lbl-active-count" style="color: var(--color-landslide); font-weight: bold;">4 Active</span>
+                  </div>
+                  
+                  <div class="incidents-list" id="incidents-feed-list">
+                    <!-- Cards will be populated dynamically by app.js -->
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- VIEW 2: Report Incident Wizard -->
+            <div class="app-screen-view" id="view-report-form">
+              <div class="report-form-container">
+                
+                <!-- Form steps visual dots -->
+                <div class="form-steps-indicator">
+                  <div class="form-step-dot active" id="step-dot-1">1</div>
+                  <div class="form-step-dot" id="step-dot-2">2</div>
+                  <div class="form-step-dot" id="step-dot-3">3</div>
+                </div>
+                
+                <!-- Wizard content -->
+                <div class="form-wizard-content">
+                  
+                  <!-- Wizard Step 1: Select Type -->
+                  <div class="wizard-step active" id="wizard-step-1">
+                    <div class="form-group">
+                      <label class="form-label" id="lbl-wizard-step1-title">Select Incident Type</label>
+                      <div class="type-grid">
+                        <div class="type-option-card selected" data-type="flood">
+                          <span class="type-option-icon" style="color: var(--color-flood);"><i class="bi bi-water"></i></span>
+                          <span class="type-option-label" id="lbl-type-flood">Flood</span>
+                        </div>
+                        <div class="type-option-card" data-type="landslide">
+                          <span class="type-option-icon" style="color: var(--color-landslide);"><i class="bi bi-tree-fill"></i></span>
+                          <span class="type-option-label" id="lbl-type-landslide">Landslide</span>
+                        </div>
+                        <div class="type-option-card" data-type="roadblock">
+                          <span class="type-option-icon" style="color: var(--color-warning);"><i class="bi bi-cone-striped"></i></span>
+                          <span class="type-option-label" id="lbl-type-roadblock">Road Block</span>
+                        </div>
+                        <div class="type-option-card" data-type="rescue">
+                          <span class="type-option-icon" style="color: var(--color-critical);"><i class="bi bi-heart-pulse-fill"></i></span>
+                          <span class="type-option-label" id="lbl-type-rescue">Rescue Needed</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Wizard Step 2: Location Map Picker -->
+                  <div class="wizard-step" id="wizard-step-2">
+                    <div class="form-group">
+                      <label class="form-label" id="lbl-wizard-step2-title">Confirm Location</label>
+                      <div class="location-selector-map" id="picker-map">
+                        <div class="map-grid-overlay"></div>
+                        <div class="map-crosshair">
+                          <div class="map-location-dot"></div>
+                        </div>
+                      </div>
+                      
+                      <div class="gps-info-bar">
+                        <span id="gps-coords">Lat: 11.602, Lng: 76.083</span>
+                        <button class="btn-gps-refresh" id="btn-gps-auto"><i class="bi bi-geo-fill"></i> Auto GPS</button>
+                      </div>
+                      
+                      <div class="form-group" style="margin-top: 6px;">
+                        <label class="form-label" style="font-size: 0.65rem;" id="lbl-district">District / Region</label>
+                        <input type="text" class="form-input-text" id="input-district" value="Wayanad" readonly>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Wizard Step 3: Photo Upload and Details -->
+                  <div class="wizard-step" id="wizard-step-3">
+                    <div class="form-group">
+                      <label class="form-label" id="lbl-wizard-step3-title">Upload Photo & Details</label>
+                      <div class="image-upload-box" id="btn-simulate-upload">
+                        <div class="upload-icon"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+                        <div class="upload-text" id="lbl-upload-instruction">Tap to simulate photo upload<br><span style="font-size: 0.6rem; color: var(--text-muted);">Supports automatic 2G compression</span></div>
+                        <img src="" class="upload-preview-img" id="upload-preview">
+                        <div class="compression-status-pill" id="compress-status">Compressed to 180KB</div>
+                      </div>
+                    </div>
+                    
+                    <div class="form-group">
+                      <label class="form-label" id="lbl-description">Description</label>
+                      <textarea class="form-input-text" id="input-desc" placeholder="Details (e.g. Rising water level, road blocked by boulder)" rows="3" style="resize: none;"></textarea>
+                    </div>
+                  </div>
+                  
+                  <!-- Navigation buttons -->
+                  <div class="form-navigation">
+                    <button class="btn-form-nav back" id="btn-form-back">Back</button>
+                    <button class="btn-form-nav next" id="btn-form-next">Next</button>
+                  </div>
+                  
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 3: Sync & AI validation pipeline loader -->
+            <div class="app-screen-view" id="view-pipeline">
+              <div class="pipeline-screen-content">
+                <div class="pipeline-spinner"></div>
+                <div class="pipeline-status-title" id="lbl-pipeline-title">Processing Report</div>
+                
+                <div class="pipeline-steps-timeline">
+                  <div class="pipeline-step-item" id="pipe-step-1">
+                    <div class="pipeline-step-circle">1</div>
+                    <div>
+                      <div class="pipeline-step-text" id="lbl-pipe-save">Saving to Supabase Database</div>
+                      <div class="pipeline-step-desc" id="desc-pipe-save">Storing incident type and GPS coordinates</div>
+                    </div>
+                  </div>
+                  <div class="pipeline-step-item" id="pipe-step-2">
+                    <div class="pipeline-step-circle">2</div>
+                    <div>
+                      <div class="pipeline-step-text" id="lbl-pipe-ai">Claude AI Image Validation</div>
+                      <div class="pipeline-step-desc" id="desc-pipe-ai">Analyzing photo metadata & assessing severity</div>
+                    </div>
+                  </div>
+                  <div class="pipeline-step-item" id="pipe-step-3">
+                    <div class="pipeline-step-circle">3</div>
+                    <div>
+                      <div class="pipeline-step-text" id="lbl-pipe-cluster">Clustering Engine Check</div>
+                      <div class="pipeline-step-desc" id="desc-pipe-cluster">Grouping with surrounding local reports</div>
+                    </div>
+                  </div>
+                  <div class="pipeline-step-item" id="pipe-step-4">
+                    <div class="pipeline-step-circle">4</div>
+                    <div>
+                      <div class="pipeline-step-text" id="lbl-pipe-alert">Alert Dispatch Engine</div>
+                      <div class="pipeline-step-desc" id="desc-pipe-alert">Triggering push messages, SMS, and WhatsApp</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 4: Success Screen -->
+            <div class="app-screen-view" id="view-success">
+              <div class="pipeline-screen-content">
+                <div class="success-screen-details">
+                  <div class="success-check-circle" id="success-icon"><i class="bi bi-check-lg"></i></div>
+                  <h3 class="success-title" id="lbl-success-title">Report Submitted</h3>
+                  <p class="success-desc" id="lbl-success-desc">Thank you for your report. Your data helps protect communities in Kerala.</p>
+                  
+                  <div class="success-action-card">
+                    <span class="success-action-label" id="lbl-share-whatsapp-title">Help Broadcast Warnings</span>
+                    <button class="btn-whatsapp-share" id="btn-whatsapp-share-trigger">
+                      <i class="bi bi-whatsapp"></i> <span id="lbl-whatsapp-btn-txt">Share to WhatsApp</span>
+                    </button>
+                  </div>
+                  
+                  <button class="btn-done-back" id="btn-success-done">Done & Return</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 5: Subscribe to alerts view -->
+            <div class="app-screen-view" id="view-subscribe">
+              <div class="subscribe-view-container">
+                <div class="form-group">
+                  <h3 style="font-size: 1rem; font-weight: 600;" id="lbl-sub-title">Kerala District Alert Network</h3>
+                  <p style="font-size: 0.75rem; color: var(--text-secondary);" id="lbl-sub-desc">Subscribe to receive instant push alerts and Twilio SMS fallbacks for monsoon emergencies in your area.</p>
+                </div>
+                
+                <div class="alert-benefits-list">
+                  <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <span id="lbl-sub-benefit1">Severe weather & landslide risk forecasts</span>
+                  </div>
+                  <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <span id="lbl-sub-benefit2">FCM notification overlay during cell network drops</span>
+                  </div>
+                  <div class="benefit-item">
+                    <span class="benefit-icon">✓</span>
+                    <span id="lbl-sub-benefit3">SMS broadcast fallback for non-smartphone users</span>
+                  </div>
+                </div>
+
+                <div class="subscribe-form">
+                  <div class="form-group">
+                    <label class="form-label" id="lbl-sub-district">Select District</label>
+                    <select class="form-input-text" id="select-sub-district">
+                      <option value="Wayanad">Wayanad</option>
+                      <option value="Idukki">Idukki</option>
+                      <option value="Kozhikode">Kozhikode</option>
+                      <option value="Thrissur">Thrissur</option>
+                      <option value="Ernakulam">Ernakulam</option>
+                      <option value="Alappuzha">Alappuzha</option>
+                    </select>
+                  </div>
+                  
+                  <div class="form-group">
+                    <label class="form-label" id="lbl-sub-phone">Phone Number (SMS Fallback)</label>
+                    <input type="tel" class="form-input-text" id="input-sub-phone" placeholder="+91 XXXXX XXXXX">
+                  </div>
+
+                  <button class="btn-subscribe-submit" id="btn-subscribe-trigger">Subscribe to Alerts</button>
+                  <button class="btn-done-back" id="btn-subscribe-back" style="margin-top: 0;">Back</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Phone Notification Toast -->
+          <div class="interactive-overlay-toast" id="app-toast">Report cached locally in IndexedDB!</div>
+
+          <!-- Bottom Navigation Bar -->
+          <div class="phone-bottom-nav">
+            <div class="nav-tab-item active" id="nav-tab-home">
+              <span class="nav-tab-icon"><i class="bi bi-house-door-fill"></i></span>
+              <span id="lbl-nav-home">Home</span>
+            </div>
+            <div class="nav-tab-item" id="nav-tab-report">
+              <span class="nav-tab-icon"><i class="bi bi-plus-circle-fill"></i></span>
+              <span id="lbl-nav-report">Report</span>
+            </div>
+            <div class="nav-tab-item" id="nav-tab-alerts">
+              <span class="nav-tab-icon"><i class="bi bi-bell-fill"></i></span>
+              <span id="lbl-nav-alerts">Alerts</span>
+            </div>
+          </div>
+          
+          <!-- Home swipe indicator -->
+          <div class="phone-home-indicator"></div>
+          
+        </div>
+      </div>
+      
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
