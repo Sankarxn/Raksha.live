@@ -11,7 +11,9 @@ import {
   Phone, 
   MapPin,
   ChevronDown,
-  Globe
+  Globe,
+  Info,
+  Activity
 } from 'lucide-react';
 
 const translations = {
@@ -80,6 +82,7 @@ export default function SubscribeAlerts() {
   const [success, setSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [smsLogs, setSmsLogs] = useState<any[]>([]);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   useEffect(() => {
     const fetchSmsLogs = async () => {
@@ -152,13 +155,48 @@ export default function SubscribeAlerts() {
           {t.dashboard}
         </Link>
 
-        <button
-          onClick={() => setLang(lang === 'EN' ? 'ML' : 'EN')}
-          className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-lg backdrop-blur-md"
-        >
-          <Globe className="w-3.5 h-3.5 text-amber-500" />
-          {lang === 'EN' ? 'മലയാളം' : 'English'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setLang(lang === 'EN' ? 'ML' : 'EN')}
+            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-xs font-semibold px-4 py-2.5 rounded-xl transition-all shadow-lg backdrop-blur-md"
+          >
+            <Globe className="w-3.5 h-3.5 text-amber-500" />
+            {lang === 'EN' ? 'മലയാളം' : 'English'}
+          </button>
+
+          {/* Info Credits Toggle */}
+          <div className="relative">
+            <button
+              onClick={() => setInfoOpen(!infoOpen)}
+              className={`p-2.5 rounded-xl border transition-all shadow-lg backdrop-blur-md ${
+                infoOpen 
+                  ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 font-bold shadow-inner' 
+                  : 'bg-white/5 border-white/10 hover:bg-white/10 text-gray-400 hover:text-white'
+              }`}
+              title="Credits & Info"
+            >
+              <Info className="w-4 h-4" />
+            </button>
+
+            {infoOpen && (
+              <div className="absolute right-0 mt-2.5 w-64 bg-[#12141c]/95 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl z-50 text-left animate-[slideDown_0.2s_cubic-bezier(0.175,0.885,0.32,1.275)]">
+                <div className="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-wider mb-1.5">
+                  <Activity className="w-3.5 h-3.5 animate-pulse" />
+                  System Credits
+                </div>
+                <p className="text-xs text-gray-300 font-medium">
+                  RAKSHA Emergency Platform
+                </p>
+                <div className="mt-2.5 pt-2.5 border-t border-white/5 text-[11px] text-gray-400 flex flex-col gap-1">
+                  <span className="font-semibold text-white">
+                    Developed by Sankaranarayanan
+                  </span>
+                  <span>Kerala Broadcast Network &copy; 2026</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Main Card container with drop shadow & borders */}
@@ -322,9 +360,7 @@ export default function SubscribeAlerts() {
             smsLogs.map((log: any) => (
               <div key={log.id} className="bg-white/[0.02] border border-white/5 rounded-xl p-3.5 flex flex-col gap-1.5 transition-all hover:bg-white/[0.04] text-left">
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-blue-400 font-bold">
-                    {log.phone ? `${log.phone.slice(0, 3)}****${log.phone.slice(-4)}` : 'Subscriber'}
-                  </span>
+                  <span className="text-blue-400 font-bold">Alert Dispatched</span>
                   <span className="text-gray-500">{new Date(log.timestamp).toLocaleTimeString()}</span>
                 </div>
                 <div className="text-[11px] text-gray-300 leading-normal bg-black/20 p-2.5 rounded-lg font-mono whitespace-pre-line">

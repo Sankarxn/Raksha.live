@@ -18,7 +18,8 @@ import {
   RefreshCw,
   Clock,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  Info
 } from 'lucide-react';
 
 const translations = {
@@ -88,6 +89,7 @@ export default function Dashboard() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [audioEnabled, setAudioEnabled] = useState(true);
+  const [infoOpen, setInfoOpen] = useState(false);
   
   // Voting session state
   const [userVotes, setUserVotes] = useState<Record<string, 'upvote' | 'downvote'>>({});
@@ -360,6 +362,39 @@ export default function Dashboard() {
           >
             {lang === 'EN' ? 'മലയാളം' : 'English'}
           </button>
+
+          {/* Info Credits Toggle */}
+          <div className="relative">
+            <button
+              onClick={() => setInfoOpen(!infoOpen)}
+              className={`p-2 rounded-full border transition-all ${
+                infoOpen 
+                  ? 'bg-blue-500/10 border-blue-500/30 text-blue-400 font-bold shadow-inner' 
+                  : 'hover:bg-white/5 border-transparent hover:border-white/10 text-gray-400 hover:text-white'
+              }`}
+              title="Credits & Info"
+            >
+              <Info className="w-4 h-4" />
+            </button>
+
+            {infoOpen && (
+              <div className="absolute right-0 mt-2.5 w-64 bg-[#12141c]/95 backdrop-blur-xl border border-white/10 p-4 rounded-xl shadow-2xl z-50 text-left animate-[slideDown_0.2s_cubic-bezier(0.175,0.885,0.32,1.275)]">
+                <div className="flex items-center gap-2 text-blue-400 font-bold text-xs uppercase tracking-wider mb-1.5">
+                  <Activity className="w-3.5 h-3.5 animate-pulse" />
+                  System Credits
+                </div>
+                <p className="text-xs text-gray-300 font-medium">
+                  RAKSHA Emergency Platform
+                </p>
+                <div className="mt-2.5 pt-2.5 border-t border-white/5 text-[11px] text-gray-400 flex flex-col gap-1">
+                  <span className="font-semibold text-white">
+                    Developed by Sankaranarayanan
+                  </span>
+                  <span>Kerala Broadcast Network &copy; 2026</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 

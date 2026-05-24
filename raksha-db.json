@@ -26,13 +26,13 @@
       "village": "Calicut City",
       "report_count": 1,
       "confirmed": true,
-      "active": true,
+      "active": false,
       "description": "Active Flood reported in Calicut City, Kozhikode. Avoid the area and stay safe!",
       "id": "inc-0cg6r8tw0",
       "upvotes": 3,
       "downvotes": 0,
       "first_reported_at": "2026-05-23T17:05:18.152Z",
-      "last_updated_at": "2026-05-23T17:09:15.242Z"
+      "last_updated_at": "2026-05-24T04:59:10.443Z"
     }
   ],
   "subscriptions": [

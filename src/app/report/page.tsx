@@ -69,7 +69,11 @@ export default function ReportIncident() {
         setGpsLoading(false);
 
         // Reverse geocoding using OpenStreetMap Nominatim
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`, {
+          headers: {
+            'User-Agent': 'RAKSHA-Kerala-Emergency-Network/1.0 (sankaranarayanan.raksha@gmail.com)'
+          }
+        })
           .then(res => res.json())
           .then(data => {
             if (data && data.address) {
@@ -152,15 +156,26 @@ export default function ReportIncident() {
     };
 
     if (!isOnline) {
-      // Local Storage Offline queue save (IndexedDB Mock)
+      // Strip base64 photo for offline queue to prevent localStorage QuotaExceededError (5MB limit)
+      const offlinePayload = {
+        ...payload,
+        photo: null // Stored as extremely lightweight JSON
+      };
+
       setTimeout(() => {
-        const queue = JSON.parse(localStorage.getItem('raksha_offline_queue') || '[]');
-        queue.push(payload);
-        localStorage.setItem('raksha_offline_queue', JSON.stringify(queue));
-        
-        setSubmitting(false);
-        setSuccess(true);
-        setReportResult({ offline: true });
+        try {
+          const queue = JSON.parse(localStorage.getItem('raksha_offline_queue') || '[]');
+          queue.push(offlinePayload);
+          localStorage.setItem('raksha_offline_queue', JSON.stringify(queue));
+          
+          setSubmitting(false);
+          setSuccess(true);
+          setReportResult({ offline: true });
+        } catch (storageErr) {
+          console.error('[Offline Storage] Quota full error:', storageErr);
+          setSubmitting(false);
+          setGpsError("Offline storage queue is full. Please clear some browser space or return online to submit.");
+        }
       }, 1500);
       return;
     }
@@ -226,7 +241,11 @@ export default function ReportIncident() {
     setGpsError(null);
 
     // Reverse geocoding simulated coordinates too
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${scaleLat}&lon=${scaleLng}`)
+    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${scaleLat}&lon=${scaleLng}`, {
+      headers: {
+        'User-Agent': 'RAKSHA-Kerala-Emergency-Network/1.0 (sankaranarayanan.raksha@gmail.com)'
+      }
+    })
       .then(res => res.json())
       .then(data => {
         if (data && data.address) {

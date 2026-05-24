@@ -1,10 +1,8 @@
-const CACHE_NAME = 'raksha-cache-v1';
+const CACHE_NAME = 'raksha-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/manifest.json',
-  '/favicon.ico',
-  '/flood_report_mock.png',
-  '/landslide_report_mock.png'
+  '/favicon.ico'
 ];
 
 // Install Event
@@ -44,7 +42,8 @@ self.addEventListener('fetch', (event) => {
     event.request.method !== 'GET' ||
     requestUrl.pathname.startsWith('/api/') ||
     requestUrl.pathname.includes('/_next/') ||
-    requestUrl.hostname.includes('localhost') && requestUrl.port === '3000'
+    requestUrl.hostname.includes('localhost') ||
+    requestUrl.hostname.includes('127.0.0.1')
   ) {
     return;
   }
