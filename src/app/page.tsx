@@ -331,17 +331,16 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Connection Status Label */}
           <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-full text-xs font-semibold">
             {isOnline ? (
               <>
                 <Wifi className="w-4 h-4 text-[#16a34a] animate-pulse" />
-                <span className="text-[#16a34a]">{t.online}</span>
+                <span className="hidden sm:inline text-[#16a34a]">{t.online}</span>
               </>
             ) : (
               <>
                 <WifiOff className="w-4 h-4 text-red-500 animate-pulse" />
-                <span className="text-red-500">{t.offline}</span>
+                <span className="hidden sm:inline text-red-500">{t.offline}</span>
               </>
             )}
           </div>
@@ -399,16 +398,16 @@ export default function Dashboard() {
       </header>
 
       {/* Main Grid View */}
-      <main className="flex-1 flex overflow-hidden">
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_450px] overflow-hidden">
         
         {/* Left Side: Map Container */}
-        <section className="flex-1 relative bg-[#0e1017]">
+        <section className="h-[55vh] lg:h-full relative bg-[#0e1017]">
           <Map incidents={incidents} onPinClick={(inc) => setSelectedIncident(inc)} />
 
         </section>
 
         {/* Right Side: Side Panels (Feed and details) */}
-        <aside className="w-[450px] bg-[#12141c]/90 backdrop-blur-xl border-l border-white/5 flex flex-col overflow-y-auto">
+        <aside className="h-[45vh] lg:h-full bg-[#12141c]/90 backdrop-blur-xl border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col overflow-hidden z-10">
           
           {/* Quick stats panel */}
           <div className="p-5 border-b border-white/5 grid grid-cols-3 gap-3.5">
@@ -438,7 +437,10 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* Incident Detail Inspector Panel */}
+          {/* Scrollable Container for Inspector Panel and Feeds */}
+          <div className="flex-1 flex flex-col overflow-y-auto min-h-0">
+
+            {/* Incident Detail Inspector Panel */}
           {selectedIncident && (
             <div className="p-5 border-b border-white/10 bg-white/[0.02] flex flex-col gap-3.5 animate-[fadeIn_0.3s_ease]">
               <div className="flex justify-between items-start">
@@ -664,7 +666,8 @@ export default function Dashboard() {
               </div>
             )}
           </div>
-        </aside>
+        </div>
+      </aside>
       </main>
     </div>
   );

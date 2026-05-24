@@ -292,7 +292,7 @@ export default function ReportIncident() {
 
       {/* Main Wizard Form Container */}
       {!submitting && !success && (
-        <div className="w-[500px] glass-card rounded-2xl p-6 border border-white/5 shadow-2xl flex flex-col gap-6 animate-[fadeIn_0.3s_ease]">
+        <div className="w-full max-w-[500px] glass-card rounded-2xl p-6 border border-white/5 shadow-2xl flex flex-col gap-6 animate-[fadeIn_0.3s_ease]">
           
           {/* Steps Indicator dots */}
           <div className="flex justify-between items-center relative px-8">
@@ -503,7 +503,7 @@ export default function ReportIncident() {
 
       {/* PIPELINE LOADER: Backend processing steps */}
       {submitting && (
-        <div className="w-[500px] glass-card rounded-2xl p-6 border border-white/5 shadow-2xl flex flex-col items-center justify-center gap-6 animate-[fadeIn_0.3s_ease]">
+        <div className="w-full max-w-[500px] glass-card rounded-2xl p-6 border border-white/5 shadow-2xl flex flex-col items-center justify-center gap-6 animate-[fadeIn_0.3s_ease]">
           <Loader2 className="w-10 h-10 text-blue-500 animate-spin" />
           <h2 className="text-xl font-bold">Processing Disaster Report</h2>
 
@@ -546,7 +546,7 @@ export default function ReportIncident() {
 
       {/* SUCCESS: Submission Summary */}
       {success && (
-        <div className="w-[500px] glass-card rounded-2xl p-6 border border-white/5 shadow-2xl flex flex-col items-center justify-center text-center gap-5 animate-[fadeIn_0.3s_ease]">
+        <div className="w-full max-w-[500px] glass-card rounded-2xl p-6 border border-white/5 shadow-2xl flex flex-col items-center justify-center text-center gap-5 animate-[fadeIn_0.3s_ease]">
           
           {reportResult?.offline ? (
             <>

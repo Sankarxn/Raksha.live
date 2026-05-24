@@ -13,6 +13,7 @@ export default function Map({ incidents, onPinClick }: MapProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const map = useRef<any>(null);
+  const resizeObserver = useRef<ResizeObserver | null>(null);
   const [webglError, setWebglError] = useState(false);
   // Fixed initial view constants — no re-render needed on move
   const INITIAL_ZOOM = 7.0;
@@ -47,6 +48,8 @@ export default function Map({ incidents, onPinClick }: MapProps) {
       return;
     }
 
+
+
     // Dynamic import to avoid SSR crashes
     import('maplibre-gl').then((maplibregl) => {
       if (map.current) return; // already initialized
@@ -62,6 +65,16 @@ export default function Map({ incidents, onPinClick }: MapProps) {
         ],
         attributionControl: false  // Attribution hidden
       });
+
+      // Resize Observer to handle container size changes cleanly
+      resizeObserver.current = new ResizeObserver(() => {
+        if (map.current) {
+          map.current.resize();
+        }
+      });
+      if (mapContainer.current) {
+        resizeObserver.current.observe(mapContainer.current);
+      }
 
       map.current.addControl(new maplibregl.NavigationControl(), 'top-right');
 
@@ -308,6 +321,16 @@ export default function Map({ incidents, onPinClick }: MapProps) {
           .addTo(map.current);
       });
     });
+
+    return () => {
+      if (resizeObserver.current) {
+        resizeObserver.current.disconnect();
+      }
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [incidents, webglError]);
 
