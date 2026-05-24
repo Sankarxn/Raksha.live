@@ -88,7 +88,7 @@ and decentralized disaster reporting.
 
 ## 🚀 Live Demo
 
-🌐 RAKSHA.live Website
+🌐 https://rakshalive.vercel.app/
 
 ## 💻 GitHub Repository
 
